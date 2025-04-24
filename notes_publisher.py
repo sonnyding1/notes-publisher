@@ -68,18 +68,19 @@ def post_on_x(content):
         access_token=os.environ.get("access_token"),
         access_token_secret=os.environ.get("access_token_secret"),
     )
-    if len(content) > 280:
-        content = llm_summarize(content, 280)
-    response = client.create_tweet(text=content)
-    logger.info(f"Posted on X: https://twitter.com/user/status/{response.data['id']}")
+    topics = content.split("\n\n")
+    while topics:
+        topic = topics.pop(0)
+        if len(topic) > 280:
+            post = client.create_tweet(text=llm_summarize(topic, 280))
+        else:
+            post = client.create_tweet(text=topic)
+        logger.info(f"Posted on X: https://twitter.com/user/status/{post.data['id']}")
 
 
 def post_on_bluesky(content):
     client = atproto.Client()
     client.login(os.environ.get("username"), os.environ.get("password"))
-    if len(content) <= 300:
-        client.send_post(text=content)
-        return
     topics = content.split("\n\n")
     topic = topics.pop(0)
     if len(topic) > 300:
